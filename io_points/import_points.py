@@ -204,39 +204,6 @@ def parse_file(path):
         
         return Points(frame, attributes)
 
-#Copied from animall newer version of script
-def get_attribute_paths(data, attribute, key_selected):
-    # Cannot animate string attributes?
-    if attribute.data_type == 'STRING':
-        yield ("", "")
-        return;
-
-    if attribute.data_type in {'FLOAT', 'INT', 'BOOLEAN', 'INT8'}:
-        attribute_key = "value"
-    elif attribute.data_type in {'FLOAT_COLOR', 'BYTE_COLOR'}:
-        attribute_key = "color"
-    elif attribute.data_type in {'FLOAT_VECTOR', 'FLOAT2'}:
-        attribute_key = "vector"
-
-    if attribute.domain == 'POINT':
-        group = data_("Vertex %s")
-    elif attribute.domain == 'EDGE':
-        group = data_("Edge %s")
-    elif attribute.domain == 'FACE':
-        group = data_("Face %s")
-    elif attribute.domain == 'CORNER':
-        group = data_("Loop %s")
-
-    for e_i, _attribute_data in enumerate(attribute.data):
-        if (not key_selected
-                or attribute.domain == 'POINT' and data.vertices[e_i].select
-                or attribute.domain == 'EDGE' and data.edges[e_i].select
-                or attribute.domain == 'FACE' and data.polygons[e_i].select
-                or attribute.domain == 'CORNER' and is_selected_vert_loop(data, e_i)):
-            yield (f'attributes["{attribute.name}"].data[{e_i}].{attribute_key}', group % e_i)
-
-
-
 def load_points_file(obj, path, smallest_frame, smallest_frame_point_count):
     import animation_animall as animall
 
@@ -248,6 +215,9 @@ def load_points_file(obj, path, smallest_frame, smallest_frame_point_count):
     
     #Set frame
     bpy.context.scene.frame_set(points.frame);
+    
+    #Logging
+    print("Loading frame", points.frame);
     
     #Increase point count if necessary
     if(len(points) > len(obj.data.vertices)):
@@ -283,11 +253,14 @@ def load_points_file(obj, path, smallest_frame, smallest_frame_point_count):
         for attribute in points.attributes:
             if(attribute.name == "P"):
                 animall.insert_key(obj.data.vertices[idx], 'co', group=data_("Vertex %s") % idx);
-            else:
-                attribute = obj.data.attributes.get(attribute.name);
-                for path, group in get_attribute_paths(obj.data, attribute, False):
-                    if path:
-                        animall.insert_key(obj.data, path, group=group)
+
+    for attribute in points.attributes:
+        if(attribute.name != "P"):
+            blender_attribute = obj.data.attributes.get(attribute.name);
+            access_name = get_mesh_attribute_access_name(blender_attribute);
+            if(not blender_attribute.data_type == 'STRING'):
+                for idx in range(0, len(obj.data.vertices)):
+                    animall.insert_key(obj.data, f'attributes["{blender_attribute.name}"].data[{idx}].{access_name}', group=data_("Vertex %s") % idx)
     
     return (smallest_frame, smallest_frame_point_count);
 
@@ -335,6 +308,7 @@ def import_points(context, filepaths):
     for filepath in filepaths:
         (smallest_frame, smallest_frame_point_count) = load_points_file(obj, filepath, smallest_frame, smallest_frame_point_count);
     
+    print("TEST7")
     add_keyframe_for_initially_hidden_points(obj, smallest_frame, smallest_frame_point_count);
     
     print("Finished loading points.")

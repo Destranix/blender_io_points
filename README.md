@@ -5,6 +5,8 @@ Addon for [Blender](https://www.blender.org/) 2.8+ to import point data in a cus
 
 **NOTE:** This add-on is not yet well tested and the functionality is basic.
 
+**NOTE:** Keyframe insertion is pretty slow unfortunatly. This heavily slows down the script.
+
 ## General
 
 Points are imported as vertices of a newly created object. For each loaded frame a keyframe is added. Point creation/removal is handled by a vertex group and a mask modifier.
