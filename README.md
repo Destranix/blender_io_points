@@ -33,7 +33,7 @@ Afterwards you will see a screen with the following message. You have to do what
 After installing this plugin, there are two ways to import Points in a custom format.
 
 ### Import from the user interface
-You can import Points from the File menu (shown in first screenshot):
+You can import Points from the File menu. You can select several files:
 
 >  *File -> Import -> Points (.txt)*
 
@@ -47,7 +47,7 @@ A file is structured like this:
 <attribute>
 ...
 ```
-The first line only contaisn the frame number. This must be a frame number valid for blender.
+The first line only contains the frame number. This must be a frame number valid for blender.
 
 An attribute may look like this:
 ```
@@ -58,9 +58,9 @@ An attribute may look like this:
 All token are separated by single spaces.
 The first token of each line is the type of the attribute. These types orientate on blender types.
 The second token is the name of the attribute.
-For some types (e.g. `VECTOR`) a stride and a element type is needed (third and forth token).
+For some types (e.g. `VECTOR`) a stride and a element type are needed (third and forth token).
 
-After that a space separated list of values is supplied, that will be parsed based on the provieded attribute parameters.
+After the last token a space separated list of values is supplied, which will be parsed based on the provieded attribute parameters.
 
 Currently supported types are:
 ```
