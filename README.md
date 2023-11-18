@@ -27,9 +27,9 @@ Open Blender and navigate to:
   Edit -> Preferences -> Add-ons -> Install
 
 When prompted select the zip file `io_points.zip`.
-Afterwards you will see a screen with the following message. You have to do what the message says (message knows best. Always trust message).
+Afterwards you will see a screen with a message telliing you to enable the add-on. You have to do what the message says (message knows best. Always trust message).
 
-**NOTE:** You must enable the plugin by clicking the box shown in the screenshot before you can use it!
+**NOTE:** You must enable the plugin by clicking the box (as the message says) before you can use it!
 
 ## Usage
 After installing this plugin, there are two ways to import Points in a custom format.
