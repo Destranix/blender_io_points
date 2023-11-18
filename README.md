@@ -73,11 +73,14 @@ STRING [name(string] <data>
 VALUE [name(string] <data>
 ```
 
-The attribute `P` has a special meaning. It is used as position for the points.
+The attribute `P` has a special meaning. It is used as position for the points. It must have the properties `VECTOR P 3 VALUE`.
+The attribute `IDX` has a special meaning. It may be used for indexing the points, allowing unsorted and sparse data storage. All indices must be non-negative. It must have the properties `INT IDX`.
+In a sequence of files it is allowed that only some have the `IDX` attribute while others have not. When not present it is assumed the points are provided in order starting with index 0.
 
 As an example a file may look like this:
 ```
-2
+1
+INT IDX 0 5 3 6
 VECTOR P 3 VALUE 1.0 2.0 3.0 2.1 3.1 4.1 3.2 4.2 5.2 4.2 5.2 6.2
 VECTOR N 3 VALUE 1.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0 0.0 1.0 0.0 0.0
 INT A 0 1 2 3

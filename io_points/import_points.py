@@ -206,7 +206,7 @@ def parse_file(path):
 
 def load_points_file(obj, path, smallest_frame, smallest_frame_point_count):
     import animation_animall as animall
-
+    
     #Parse file
     points = parse_file(path);
     
@@ -216,36 +216,56 @@ def load_points_file(obj, path, smallest_frame, smallest_frame_point_count):
     #Set frame
     bpy.context.scene.frame_set(points.frame);
     
-    #Logging
-    print("Loading frame", points.frame);
+    #Check if we have indices
+    indices_attribute = next(filter(lambda x: x.name == 'IDX', points.attributes), None);
     
+    #Get point count and point indices
+    point_count = len(points);
+    point_indices = range(0, len(points));
+    if(indices_attribute != None):
+        if(indices_attribute.type_name != "INT"):
+            raise Exception("Indices must be of type int.");
+        
+        #Find heighest index and throw error if we get negative indices
+        min_index = min(indices_attribute.values);
+        max_index = max(indices_attribute.values);
+        
+        if(min_index < 0):
+            raise Exception("Indices must be greater equal 0.");
+        
+        point_count = max_index + 1;
+        point_indices = indices_attribute.values;
+   
     #Increase point count if necessary
-    if(len(points) > len(obj.data.vertices)):
-        obj.data.vertices.add(len(points) - len(obj.data.vertices));
+    if(point_count > len(obj.data.vertices)):
+        obj.data.vertices.add(point_count - len(obj.data.vertices));
     
     if(points.frame < smallest_frame):
         smallest_frame = points.frame;
-        smallest_frame_point_count = len(points);
-    
+        smallest_frame_point_count = point_count;
+        
     #If attribute is not yet existing, add it
     for attribute in points.attributes:
         #Position are built-in attributes
-        if(attribute.name != "P"):
+        if(attribute.name != "P" and attribute.name != "IDX"):
             if(obj.data.attributes.find(attribute.name) == -1):
                 new_attribute = obj.data.attributes.new(name=attribute.name, type=get_mesh_attribute_type(attribute), domain="POINT");
     
     #Insert data for all attributes
-    for idx in range(0, len(obj.data.vertices)):
-        if(idx < len(points)):
-            hidden_group.add([idx], 0.0, "REPLACE");
-            for attribute in points.attributes:
-                if(attribute.name == "P"):
-                    obj.data.vertices[idx].co = attribute.values[idx];
-                else:
-                    setattr(obj.data.attributes[attribute.name].data[idx], get_mesh_attribute_access_name(obj.data.attributes[attribute.name]), attribute.values[idx]);
-        else:
-            #Hide vertices for which we don't have attributes
-            hidden_group.add([idx], 1.0, "REPLACE");
+    
+    #First hide all
+    hidden_group.add(range(0, len(obj.data.vertices)), 1.0, "REPLACE");
+    
+    #Then unhide all present indices
+    hidden_group.add(point_indices, 0.0, "REPLACE");
+    
+    #Then insert data for all present points
+    for idx in range(0, len(point_indices)):
+        for attribute in points.attributes:
+            if(attribute.name == "P"):
+                obj.data.vertices[point_indices[idx]].co = attribute.values[idx];
+            elif(attribute.name != "IDX"):
+                setattr(obj.data.attributes[attribute.name].data[point_indices[idx]], get_mesh_attribute_access_name(obj.data.attributes[attribute.name]), attribute.values[idx]);
     
     #Insert keyframe
     for idx in range(0, len(obj.data.vertices)):
@@ -255,7 +275,7 @@ def load_points_file(obj, path, smallest_frame, smallest_frame_point_count):
                 animall.insert_key(obj.data.vertices[idx], 'co', group=data_("Vertex %s") % idx);
 
     for attribute in points.attributes:
-        if(attribute.name != "P"):
+        if(attribute.name != "P" and attribute.name != "IDX"):
             blender_attribute = obj.data.attributes.get(attribute.name);
             access_name = get_mesh_attribute_access_name(blender_attribute);
             if(not blender_attribute.data_type == 'STRING'):
@@ -273,9 +293,9 @@ def add_keyframe_for_initially_hidden_points(obj, smallest_frame, smallest_frame
     #Set frame
     bpy.context.scene.frame_set(smallest_frame);
     
-    for idx in range(smallest_frame_point_count, len(obj.data.vertices)):
-       #Hide vertices for which we don't have attributes
-       hidden_group.add([idx], 1.0, "REPLACE");
+    #Hide vertices that were not yet present in first frame
+    hidden_group.add(range(smallest_frame_point_count, len(obj.data.vertices)), 1.0, "REPLACE");
+    
     for idx in range(smallest_frame_point_count, len(obj.data.vertices)):
       animall.insert_key(obj.data.vertices[idx].groups[obj.data.vertices[idx].groups.find('hidden')], 'weight', group=data_("Vertex %s") % idx);
     
@@ -302,13 +322,20 @@ def import_points(context, filepaths):
     mode = context.object.mode
     bpy.ops.object.mode_set(mode='OBJECT')
     
-    #Load vertices
+    #Load points
     smallest_frame = sys.maxsize;
     smallest_frame_point_count = 0;
+    file_idx = 0;
     for filepath in filepaths:
+        #Logging
+        print("Loading file", file_idx, "Path:", filepath);
+        
+        #Load file
         (smallest_frame, smallest_frame_point_count) = load_points_file(obj, filepath, smallest_frame, smallest_frame_point_count);
-    
-    print("TEST7")
+
+        #Inc
+        file_idx = file_idx + 1;
+        
     add_keyframe_for_initially_hidden_points(obj, smallest_frame, smallest_frame_point_count);
     
     print("Finished loading points.")
