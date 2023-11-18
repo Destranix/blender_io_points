@@ -72,10 +72,11 @@ BOOLEAN [name(string] <data>
 STRING [name(string] <data>
 VALUE [name(string] <data>
 ```
+Special attributes:
+* The attribute `P` has a special meaning. It is used as position for the points. It must have the properties `VECTOR P 3 VALUE`.
+* The attribute `IDX` has a special meaning. It may be used for indexing the points, allowing unsorted and sparse data storage. All indices must be non-negative. It must have the properties `INT IDX`.
 
-The attribute `P` has a special meaning. It is used as position for the points. It must have the properties `VECTOR P 3 VALUE`.
-The attribute `IDX` has a special meaning. It may be used for indexing the points, allowing unsorted and sparse data storage. All indices must be non-negative. It must have the properties `INT IDX`.
-In a sequence of files it is allowed that only some have the `IDX` attribute while others have not. When not present it is assumed the points are provided in order starting with index 0.
+  In a sequence of files it is allowed that only some have the `IDX` attribute while others have not. When not present it is assumed the points are provided in order starting with index 0.
 
 As an example a file may look like this:
 ```
